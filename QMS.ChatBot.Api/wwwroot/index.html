@@ -1,0 +1,776 @@
+﻿
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1" />
+    <title>QMS AI Assistant</title>
+
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg: #0b1120;
+            --sidebar: #111b2d;
+            --panel: #162238;
+            --border: #293750;
+            --text: #f1f5fc;
+            --muted: #9cacc5;
+            --accent: #668cff;
+            --accent-hover: #5277ec;
+            --success: #4adea1;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .app {
+            display: flex;
+            height: 100dvh;
+            min-height: 450px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 290px;
+            flex-shrink: 0;
+            padding: 24px 18px;
+            background: var(--sidebar);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .brand-icon {
+            width: 42px;
+            height: 42px;
+            display: grid;
+            place-items: center;
+            background: #304c99;
+            border-radius: 13px;
+            font-size: 22px;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .upload-card {
+            padding: 18px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+
+            .upload-card h3 {
+                margin: 0 0 8px;
+                font-size: 15px;
+            }
+
+            .upload-card p {
+                color: var(--muted);
+                font-size: 13px;
+                line-height: 1.5;
+            }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .upload-label {
+            display: block;
+            text-align: center;
+            padding: 13px;
+            margin-top: 15px;
+            border: 1px dashed #6886c2;
+            border-radius: 10px;
+            color: #c4d4ff;
+            cursor: pointer;
+            font-size: 13px;
+            overflow-wrap: anywhere;
+        }
+
+            .upload-label:hover {
+                background: #223452;
+            }
+
+        button {
+            font: inherit;
+            cursor: pointer;
+        }
+
+        .process-btn {
+            width: 100%;
+            margin-top: 12px;
+            padding: 12px;
+            background: var(--accent);
+            color: white;
+            border: 0;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+            .process-btn:hover:not(:disabled) {
+                background: var(--accent-hover);
+            }
+
+        button:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        .file-status {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+            margin-top: 12px;
+            overflow-wrap: anywhere;
+        }
+
+            .file-status.success {
+                color: var(--success);
+            }
+
+            .file-status.error {
+                color: #ff9898;
+            }
+
+        .sidebar-footer {
+            margin-top: auto;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        /* Main chat */
+        .chat-panel {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            padding: 18px 28px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+            .chat-header h2 {
+                margin: 0;
+                font-size: 17px;
+            }
+
+        .model-badge {
+            color: var(--success);
+            font-size: 12px;
+            background: #15362f;
+            padding: 8px 12px;
+            border-radius: 20px;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px 24px;
+        }
+
+        .message-container {
+            max-width: 850px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        .welcome {
+            text-align: center;
+            padding: 40px 12px 20px;
+        }
+
+        .welcome-icon {
+            font-size: 45px;
+            margin-bottom: 12px;
+        }
+
+        .welcome h1 {
+            font-size: 27px;
+            margin: 0 0 10px;
+        }
+
+        .welcome p {
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .suggestions {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .suggestion {
+            padding: 11px 15px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: #dce5f7;
+            font-size: 13px;
+        }
+
+            .suggestion:hover:not(:disabled) {
+                border-color: var(--accent);
+            }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            max-width: 90%;
+        }
+
+            .message.user {
+                align-self: flex-end;
+                flex-direction: row-reverse;
+            }
+
+            .message.assistant {
+                align-self: flex-start;
+            }
+
+        .avatar {
+            width: 34px;
+            height: 34px;
+            flex-shrink: 0;
+            display: grid;
+            place-items: center;
+            border-radius: 10px;
+            background: #2d4373;
+        }
+
+        .user .avatar {
+            background: #3e5ec3;
+        }
+
+        .bubble {
+            padding: 14px 18px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            line-height: 1.7;
+            font-size: 14px;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .user .bubble {
+            background: #294b9b;
+            border-color: #294b9b;
+        }
+
+        /* Composer */
+        .composer-area {
+            padding: 16px 24px 22px;
+            border-top: 1px solid var(--border);
+        }
+
+        .composer {
+            max-width: 850px;
+            margin: 0 auto;
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            padding: 10px;
+            background: var(--panel);
+            border: 1px solid #394b68;
+            border-radius: 16px;
+        }
+
+        textarea {
+            flex: 1;
+            min-width: 0;
+            padding: 10px;
+            background: transparent;
+            border: 0;
+            outline: none;
+            resize: none;
+            color: var(--text);
+            font: inherit;
+            line-height: 1.5;
+            max-height: 150px;
+        }
+
+            textarea::placeholder {
+                color: var(--muted);
+            }
+
+        .send-btn {
+            width: 44px;
+            height: 44px;
+            border: 0;
+            border-radius: 12px;
+            background: var(--accent);
+            color: white;
+            font-size: 20px;
+        }
+
+            .send-btn:hover:not(:disabled) {
+                background: var(--accent-hover);
+            }
+
+        .composer-note {
+            text-align: center;
+            color: var(--muted);
+            font-size: 11px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 700px) {
+            .app {
+                flex-direction: column;
+                height: 100dvh;
+            }
+
+            .sidebar {
+                width: 100%;
+                padding: 12px 16px;
+                gap: 10px;
+                max-height: 235px;
+                overflow-y: auto;
+                border-right: 0;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .brand {
+                font-size: 17px;
+            }
+
+            .brand-icon {
+                width: 32px;
+                height: 32px;
+            }
+
+            .sidebar-footer {
+                display: none;
+            }
+
+            .upload-card {
+                padding: 10px;
+            }
+
+                .upload-card p {
+                    display: none;
+                }
+
+            .chat-header {
+                padding: 12px 16px;
+            }
+
+            .messages {
+                padding: 20px 12px;
+            }
+
+            .welcome {
+                padding: 20px 5px;
+            }
+
+                .welcome h1 {
+                    font-size: 21px;
+                }
+
+            .message {
+                max-width: 100%;
+            }
+
+            .composer-area {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div>
+                <div class="brand">
+                    <div class="brand-icon">✦</div>
+                    QMS AI
+                </div>
+                <div class="subtitle">
+                    Your intelligent document assistant
+                </div>
+            </div>
+
+            <div class="upload-card">
+                <h3>📄 Knowledge Base</h3>
+                <p>
+                    Upload a QMS PDF to let AI answer
+                    questions using its content.
+                </p>
+
+                <label class="upload-label" for="pdfFile"
+                       id="fileLabel">
+                    + Choose PDF Document
+                </label>
+
+                <input type="file"
+                       id="pdfFile"
+                       accept=".pdf,application/pdf" />
+
+                <button class="process-btn"
+                        id="processBtn"
+                        disabled>
+                    Process Document
+                </button>
+
+                <div class="file-status"
+                     id="fileStatus"
+                     role="status">
+                    No document uploaded.
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div>● Local AI • Ollama</div>
+                <div>Embedding: nomic-embed-text</div>
+                <div>Language model: llama3.2</div>
+            </div>
+        </aside>
+
+        <!-- Chat area -->
+        <section class="chat-panel">
+            <header class="chat-header">
+                <h2>✦ Document Chat</h2>
+                <span class="model-badge">
+                    ● AI Assistant
+                </span>
+            </header>
+
+            <div class="messages" id="messages">
+                <div class="message-container"
+                     id="messageContainer">
+
+                    <div class="welcome" id="welcome">
+                        <div class="welcome-icon">✦</div>
+                        <h1>How can I help you today?</h1>
+                        <p>
+                            Upload your QMS document and
+                            ask anything about its contents.
+                        </p>
+
+                        <div class="suggestions">
+                            <button class="suggestion"
+                                    data-question="What is QCR?"
+                                    disabled>
+                                What is QCR?
+                            </button>
+
+                            <button class="suggestion"
+                                    data-question="Explain the RFQ process."
+                                    disabled>
+                                Explain RFQ
+                            </button>
+
+                            <button class="suggestion"
+                                    data-question="What is a Placement Slip?"
+                                    disabled>
+                                Placement Slip
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="composer-area">
+                <div class="composer">
+                    <textarea id="question"
+                              rows="1"
+                              placeholder="Upload a PDF to start chatting..."
+                              disabled></textarea>
+
+                    <button class="send-btn"
+                            id="askBtn"
+                            aria-label="Send question"
+                            disabled>
+                        ➤
+                    </button>
+                </div>
+
+                <div class="composer-note">
+                    AI answers are based on retrieved
+                    document content. Verify important details.
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const pdfFile =
+            document.getElementById("pdfFile");
+
+        const fileStatus =
+            document.getElementById("fileStatus");
+
+        const processBtn =
+            document.getElementById("processBtn");
+
+        const fileLabel =
+            document.getElementById("fileLabel");
+
+        const questionInput =
+            document.getElementById("question");
+
+        const askBtn =
+            document.getElementById("askBtn");
+
+        const messageContainer =
+            document.getElementById("messageContainer");
+
+        const messages =
+            document.getElementById("messages");
+
+        const welcome =
+            document.getElementById("welcome");
+
+        const suggestions =
+            document.querySelectorAll(".suggestion");
+
+        let documentReady = false;
+        let busy = false;
+
+        function updateChatState() {
+            const enabled = documentReady && !busy;
+
+            questionInput.disabled = !enabled;
+            askBtn.disabled =
+                !enabled || !questionInput.value.trim();
+
+            suggestions.forEach(button => {
+                button.disabled = !enabled;
+            });
+
+            questionInput.placeholder = documentReady
+                ? "Ask anything about your QMS document..."
+                : "Upload a PDF to start chatting...";
+        }
+
+        function addMessage(role, content) {
+            if (welcome) {
+                welcome.style.display = "none";
+            }
+
+            const message = document.createElement("div");
+            message.className = "message " + role;
+
+            const avatar = document.createElement("div");
+            avatar.className = "avatar";
+            avatar.textContent =
+                role === "user" ? "👤" : "✦";
+
+            const bubble = document.createElement("div");
+            bubble.className = "bubble";
+
+            // textContent prevents HTML injection
+            bubble.textContent = content;
+
+            message.appendChild(avatar);
+            message.appendChild(bubble);
+            messageContainer.appendChild(message);
+
+            messages.scrollTop = messages.scrollHeight;
+
+            return message;
+        }
+
+        function scrollToBottom() {
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        // Select PDF
+        pdfFile.addEventListener("change", () => {
+            const file = pdfFile.files[0];
+
+            documentReady = false;
+            updateChatState();
+
+            fileStatus.className = "file-status";
+
+            fileLabel.textContent = file
+                ? file.name
+                : "+ Choose PDF Document";
+
+            fileStatus.textContent = file
+                ? "Selected. Click Process Document."
+                : "No document uploaded.";
+
+            processBtn.disabled = !file;
+        });
+
+        // Upload and process PDF
+        processBtn.addEventListener("click", async () => {
+            const file = pdfFile.files[0];
+
+            if (!file || busy) return;
+
+            if (!file.name.toLowerCase().endsWith(".pdf")) {
+                fileStatus.textContent =
+                    "Please select a PDF file.";
+                return;
+            }
+
+            busy = true;
+            documentReady = false;
+            processBtn.disabled = true;
+            updateChatState();
+
+            fileStatus.className = "file-status";
+            fileStatus.textContent =
+                "Processing document and generating embeddings...";
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const response = await fetch("/api/chat/upload", {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(await response.text());
+                }
+
+                const result = await response.json();
+
+                documentReady = true;
+                fileStatus.className =
+                    "file-status success";
+
+                fileStatus.textContent =
+                    "✓ Document ready • " +
+                    result.totalChunks + " chunks indexed";
+
+                addMessage(
+                    "assistant",
+                    "Your document is ready! " +
+                    "You can now ask me questions about it."
+                );
+
+            } catch (error) {
+                fileStatus.className =
+                    "file-status error";
+
+                fileStatus.textContent =
+                    "Upload failed: " + error.message;
+            } finally {
+                busy = false;
+                processBtn.disabled = false;
+                updateChatState();
+            }
+        });
+
+        // Ask AI
+        async function askQuestion() {
+            const question = questionInput.value.trim();
+
+            if (!question || !documentReady || busy) {
+                return;
+            }
+
+            busy = true;
+            questionInput.value = "";
+            updateChatState();
+
+            addMessage("user", question);
+
+            const loadingMessage =
+                addMessage("assistant", "Thinking...");
+
+            try {
+                const response = await fetch("/api/chat/ask", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        question: question
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(await response.text());
+                }
+
+                const result = await response.json();
+
+                loadingMessage.querySelector(".bubble")
+                    .textContent =
+                    result.answer || "No answer returned.";
+
+            } catch (error) {
+                loadingMessage.querySelector(".bubble")
+                    .textContent =
+                    "Unable to generate answer: " +
+                    error.message;
+            } finally {
+                busy = false;
+                updateChatState();
+                questionInput.focus();
+                scrollToBottom();
+            }
+        }
+
+        askBtn.addEventListener("click", askQuestion);
+
+        questionInput.addEventListener("input", () => {
+            updateChatState();
+        });
+
+        questionInput.addEventListener("keydown", event => {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                askQuestion();
+            }
+        });
+
+        suggestions.forEach(button => {
+            button.addEventListener("click", () => {
+                if (!documentReady || busy) return;
+
+                questionInput.value =
+                    button.dataset.question;
+
+                askQuestion();
+            });
+        });
+
+        updateChatState();
+    </script>
+</body>
+</html>
