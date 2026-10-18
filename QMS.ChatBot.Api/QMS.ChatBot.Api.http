@@ -1,6 +1,15 @@
 @QMS.ChatBot.Api_HostAddress = http://localhost:5044
 
-GET {{QMS.ChatBot.Api_HostAddress}}/weatherforecast/
+GET {{QMS.ChatBot.Api_HostAddress}}/api/chat/test
 Accept: application/json
+
+###
+
+POST {{QMS.ChatBot.Api_HostAddress}}/api/chat/ask
+Content-Type: application/json
+
+{
+  "question": "What is this document about?"
+}
 
 ###
